@@ -16,10 +16,10 @@ export function envelope<T extends Record<string, unknown>>(
   now: Date = new Date(),
 ): Envelope<T> {
   return {
+    ...payload,
     disclaimer: DISCLAIMER,
     server_time: now.toISOString(),
     schema: SCHEMA_VERSION,
-    ...payload,
   };
 }
 

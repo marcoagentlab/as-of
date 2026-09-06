@@ -6,32 +6,33 @@ Not a TVL dashboard. Not a trading bot. Not investment advice. Not a Korea STO e
 
 **Unknown > wrong.** Every figure carries a `source` and `as_of`, or it is `null` with `quality: unavailable`.
 
-## Layout
+## Official runtime
 
-```
-src/lib/rwa/          # zod schema, catalog, eligibility, freshness  (packages/schema)
-src/lib/rwa/seed/     # 10 assets + sofr stub                         (packages/seed)
-src/routes/v0.*       # REST /v0/*  (Hono-shaped contract on TanStack Start)
-src/routes/*.tsx      # explorer (apps/web)
-apps/mcp/index.mjs    # MCP stdio
-docs/                 # SCHEMA_V0.md DISCLAIMER.md TODO.md
-```
+This is the only supported local contract. There is no pnpm path and no Hono `:8787` server.
 
-Stack: Node 22, TanStack Start, zod, MCP stdio.
-
-## Run
+| | |
+|---|---|
+| Package manager | **npm** |
+| Node | 22+ |
+| Dev | **`npm run dev`** |
+| Bind | `0.0.0.0:8080` |
+| Health | `GET /v0/health` (no key) |
+| Auth | header `x-api-key: DEMO_KEY` (override with env `RWA_API_KEY`) |
+| MCP | `node apps/mcp/index.mjs` |
+| MCP base | env `RWA_API_BASE=http://127.0.0.1:8080` |
 
 ```bash
 npm install
-npm run dev          # explorer + REST on the app port
-npm test             # includes src/lib/rwa/rwa.test.ts
+npm run dev          # explorer UI + REST /v0/* on :8080
+npm run test:rwa     # schema / seed / eligibility
+npm test             # rwa + workspace tests
 ```
 
-Default API key: `DEMO_KEY` (`x-api-key`). Override with `RWA_API_KEY`. See `.env.example`.
+See `.env.example`. Stack rationale (TanStack Start vs the original Hono monorepo brief): [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## REST
 
-All data responses include `disclaimer` and `server_time`. Health is unauthenticated; the rest require `x-api-key: DEMO_KEY`. Rate-limit stub: 60 req/min, `X-RateLimit-*` headers.
+All JSON responses — including 4xx — include `disclaimer`, `server_time`, and `schema`. Rate-limit stub: **in-memory, 60 req/min per caller**, `X-RateLimit-*` headers. It resets on process restart and is not shared across instances. See `docs/TODO.md`.
 
 ```bash
 curl -s http://127.0.0.1:8080/v0/health
@@ -85,6 +86,8 @@ printf '{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n' | node apps/mcp/index.
 
 Coverage: `buidl` `ousg` `usdy` `ustb` `benji` `spiko_ustbl` `spiko_eutbl` `syrup_usdc` `jtrsy` `xaut`.
 
+Canonical files: `src/lib/rwa/seed/assets.ts` + `src/lib/rwa/seed/sofr.ts`.
+
 Structural fields (issuer, wrapper, gates) are `estimated` from public product shape. NAV, APY, SOFR, ISIN, and token addresses are **unavailable**. Empty `chains` rather than fake addresses. `sofr` is null until a feed is chosen. No seed is `verified`.
 
 ## Schema ambiguities (proposed, not silent)
@@ -95,4 +98,4 @@ Structural fields (issuer, wrapper, gates) are `estimated` from public product s
 4. SOFR feed: none. `spread_vs_sofr_bps` is null unless both APYs are non-null.
 5. Public name: **As-Of**. Internal code name is fine.
 
-See `docs/SCHEMA_V0.md`, `docs/DISCLAIMER.md`, `docs/TODO.md`.
+See `docs/SCHEMA_V0.md`, `docs/DISCLAIMER.md`, `docs/TODO.md`, `docs/ARCHITECTURE.md`.

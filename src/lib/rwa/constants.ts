@@ -9,7 +9,9 @@ export const DISCLAIMER_KO =
 export const YIELD_METHODOLOGY = "net=gross-fee; spread=net-sofr";
 
 /** NAV freshness window. Open question: 24h vs 36h vs per-asset — 36h for v0. */
-export const FRESHNESS_HOURS = 36;
+const parsedFreshness = Number(process.env.RWA_FRESHNESS_HOURS);
+export const FRESHNESS_HOURS =
+  Number.isFinite(parsedFreshness) && parsedFreshness > 0 ? parsedFreshness : 36;
 
 export const DEMO_API_KEY = "DEMO_KEY";
 
