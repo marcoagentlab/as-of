@@ -1,0 +1,141 @@
+{
+  "$id": "https://example.local/rwa/schema-v0.json",
+  "title": "RWA Asset v0",
+  "type": "object",
+  "required": ["id", "name", "asset_class", "wrapper_type", "issuer", "nav_model", "yield_type", "chains", "identifiers", "eligibility", "nav", "yield", "links", "quality", "updated_at"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "name": { "type": "string" },
+    "symbol": { "type": ["string", "null"] },
+    "asset_class": { "enum": ["treasury_fund", "private_credit", "commodity", "equity_wrapper", "cash_mgmt", "other"] },
+    "wrapper_type": { "enum": ["reg_d", "forty_act_mmf", "ucits_mmf", "open_ended_fund", "tokenized_note", "unknown"] },
+    "issuer": { "type": "string" },
+    "manager": { "type": ["string", "null"] },
+    "custodian": { "type": ["string", "null"] },
+    "transfer_agent": { "type": ["string", "null"] },
+    "benchmark": { "type": ["string", "null"] },
+    "nav_model": { "enum": ["stable_1", "continuous", "periodic_daily", "periodic_other", "unknown"] },
+    "yield_type": { "enum": ["distributing", "accumulating", "mixed", "unknown"] },
+    "chains": { "type": "array", "items": { "$ref": "#/$defs/ChainDeployment" } },
+    "identifiers": { "$ref": "#/$defs/Identifiers" },
+    "eligibility": { "$ref": "#/$defs/Eligibility" },
+    "nav": { "$ref": "#/$defs/NavSnapshot" },
+    "yield": { "$ref": "#/$defs/YieldSnapshot" },
+    "liquidity": { "anyOf": [{ "$ref": "#/$defs/LiquiditySnapshot" }, { "type": "null" }] },
+    "links": { "$ref": "#/$defs/Links" },
+    "quality": { "$ref": "#/$defs/AssetQuality" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "Quality": { "enum": ["verified", "estimated", "unavailable"] },
+    "Freshness": { "enum": ["fresh", "stale", "unknown"] },
+    "SourceRef": {
+      "type": "object",
+      "required": ["name", "url", "retrieved_at"],
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": ["string", "null"] },
+        "retrieved_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ChainDeployment": {
+      "type": "object",
+      "required": ["chain_id", "chain_name", "token_address", "source"],
+      "properties": {
+        "chain_id": { "type": ["number", "string"] },
+        "chain_name": { "type": "string" },
+        "token_address": { "type": "string" },
+        "decimals": { "type": ["number", "null"] },
+        "standard": { "type": ["string", "null"] },
+        "bridge": { "type": ["string", "null"] },
+        "supply": { "type": ["object", "null"] },
+        "source": { "$ref": "#/$defs/SourceRef" }
+      }
+    },
+    "Identifiers": {
+      "type": "object",
+      "properties": {
+        "isin": { "type": ["string", "null"] },
+        "lei": { "type": ["string", "null"] },
+        "cusip": { "type": ["string", "null"] },
+        "other": { "type": ["object", "null"] }
+      }
+    },
+    "Eligibility": {
+      "type": "object",
+      "required": ["gates", "us_persons", "retail", "source", "quality"],
+      "properties": {
+        "gates": {
+          "type": "array",
+          "items": { "enum": ["none", "us_qp", "non_us", "kyc", "allowlist", "jurisdiction_block", "unknown"] }
+        },
+        "us_persons": { "enum": ["allowed", "blocked", "unknown"] },
+        "retail": { "enum": ["allowed", "blocked", "unknown"] },
+        "min_ticket_usd": { "type": ["number", "null"] },
+        "notes": { "type": ["string", "null"] },
+        "source": { "$ref": "#/$defs/SourceRef" },
+        "quality": { "$ref": "#/$defs/Quality" }
+      }
+    },
+    "NavSnapshot": {
+      "type": "object",
+      "required": ["value", "currency", "as_of", "model", "freshness", "source", "quality"],
+      "properties": {
+        "value": { "type": ["number", "null"] },
+        "currency": { "type": "string" },
+        "as_of": { "type": ["string", "null"] },
+        "model": { "enum": ["stable_1", "continuous", "periodic_daily", "periodic_other", "unknown"] },
+        "oracle": { "type": ["string", "null"] },
+        "freshness": { "$ref": "#/$defs/Freshness" },
+        "source": { "$ref": "#/$defs/SourceRef" },
+        "quality": { "$ref": "#/$defs/Quality" }
+      }
+    },
+    "YieldSnapshot": {
+      "type": "object",
+      "required": ["gross_apy", "net_apy", "yield_type", "as_of", "methodology", "source", "quality"],
+      "properties": {
+        "gross_apy": { "type": ["number", "null"] },
+        "net_apy": { "type": ["number", "null"] },
+        "fee_drag_bps": { "type": ["number", "null"] },
+        "sofr_apy": { "type": ["number", "null"] },
+        "spread_vs_sofr_bps": { "type": ["number", "null"] },
+        "yield_type": { "enum": ["distributing", "accumulating", "mixed", "unknown"] },
+        "as_of": { "type": ["string", "null"] },
+        "methodology": { "type": "string" },
+        "source": { "$ref": "#/$defs/SourceRef" },
+        "quality": { "$ref": "#/$defs/Quality" }
+      }
+    },
+    "LiquiditySnapshot": {
+      "type": "object",
+      "required": ["redeemability", "source", "quality"],
+      "properties": {
+        "redeemability": { "enum": ["daily", "t_plus", "permissioned", "unknown"] },
+        "secondary_venues": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": ["string", "null"] },
+        "source": { "$ref": "#/$defs/SourceRef" },
+        "quality": { "$ref": "#/$defs/Quality" }
+      }
+    },
+    "Links": {
+      "type": "object",
+      "required": ["website", "docs", "dashboard", "explorer"],
+      "properties": {
+        "website": { "type": ["string", "null"] },
+        "docs": { "type": ["string", "null"] },
+        "dashboard": { "type": ["string", "null"] },
+        "explorer": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "AssetQuality": {
+      "type": "object",
+      "required": ["overall", "missing_fields", "warnings"],
+      "properties": {
+        "overall": { "$ref": "#/$defs/Quality" },
+        "missing_fields": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
